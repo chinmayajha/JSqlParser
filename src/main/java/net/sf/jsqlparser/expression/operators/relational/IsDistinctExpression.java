@@ -15,6 +15,11 @@ import net.sf.jsqlparser.expression.ExpressionVisitor;
 public class IsDistinctExpression extends BinaryExpression implements SupportsOldOracleJoinSyntax {
 
     private boolean not = false;
+    /**
+     * SQLite spelling: {@code a IS b} for IS NOT DISTINCT FROM, {@code a IS NOT b} for IS DISTINCT
+     * FROM.
+     */
+    private boolean useIsOperator = false;
 
     public boolean isNot() {
         return not;
@@ -24,6 +29,24 @@ public class IsDistinctExpression extends BinaryExpression implements SupportsOl
         not = b;
     }
 
+    public IsDistinctExpression withNot(boolean not) {
+        this.setNot(not);
+        return this;
+    }
+
+    public boolean isUseIsOperator() {
+        return useIsOperator;
+    }
+
+    public void setUseIsOperator(boolean useIsOperator) {
+        this.useIsOperator = useIsOperator;
+    }
+
+    public IsDistinctExpression withUseIsOperator(boolean useIsOperator) {
+        this.setUseIsOperator(useIsOperator);
+        return this;
+    }
+
     @Override
     public <T, S> T accept(ExpressionVisitor<T> expressionVisitor, S context) {
         return expressionVisitor.visit(this, context);
@@ -31,6 +54,9 @@ public class IsDistinctExpression extends BinaryExpression implements SupportsOl
 
     @Override
     public String getStringExpression() {
+        if (useIsOperator) {
+            return isNot() ? " IS " : " IS NOT ";
+        }
         return " IS " + (isNot() ? "NOT " : "") + "DISTINCT FROM ";
     }
 

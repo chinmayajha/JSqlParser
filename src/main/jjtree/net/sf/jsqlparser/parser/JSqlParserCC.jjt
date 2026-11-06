@@ -13122,9 +13122,16 @@ Expression IsDistinctExpression(Expression leftExpression) #IsDistinctExpression
 {
     IsDistinctExpression result = new IsDistinctExpression();
     Expression rightExpression = null;
+    boolean negated = false;
 }
 {
-    <K_IS> [<K_NOT> { result.setNot(true); } ] <K_DISTINCT> <K_FROM>
+    <K_IS>
+    (
+        LOOKAHEAD(2) [<K_NOT> { result.setNot(true); } ] <K_DISTINCT> <K_FROM>
+        | LOOKAHEAD({ Dialect.SQLITE.name().equals(getAsString(Feature.dialect)) })
+          [ LOOKAHEAD(1) <K_NOT> { negated = true; } ]
+          { result.setUseIsOperator(true); result.setNot(!negated); }
+    )
     rightExpression=SimpleExpression()
     {
         result.setLeftExpression(leftExpression);
